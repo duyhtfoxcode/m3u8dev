@@ -1,0 +1,83 @@
+#EXTM3U x-tvg-url="https://animenosekai.github.io/japanterebi-xmltv/guide.xml"
+# ---------------------------------------------------------------------------
+# VHub — playlist for App Store review only
+#
+# This playlist is NOT shipped inside the app. The app contains no channel
+# list, no catalogue and no discovery service; it plays only what the user
+# adds. This file exists so an App Review engineer has something to paste
+# into "Add playlist -> Playlist URL" and can exercise every feature.
+#
+# Every entry below is either
+#   (a) an official developer test asset published by Apple at
+#       developer.apple.com/streaming/examples for exactly this purpose,
+#   (b) a work under a Creative Commons licence, or a demo stream the CDN
+#       vendor publishes itself for integration testing, or
+#   (c) one live channel that its own broadcaster streams free of charge and
+#       without registration on its public website (NHK World Japan).
+#
+# There is exactly one entry in group (c), and it is here for one reason: it
+# is the only way to show the EPG / "now playing" feature, which needs a real
+# XMLTV guide. Everything else is Apple's own material or CC-licensed.
+#
+# All 6 URLs verified 2026-09-25 with the exact User-Agent the app sends
+# ("VLC/3.0.18 LibVLC/3.0.18"), all the way through to the first media
+# segment - a master manifest answering 200 while its variants 404 is a real
+# and common failure. See docs/testing/check-streams.sh.
+#
+# ⚠️ The #EXTINF duration on each line is load-bearing; do not "normalise" it
+# to -1. The app decides live-vs-VOD from this number alone
+# (ParsedChannel.swift:53 - kind = declaredKind ?? (duration > 0 ? .movie
+# : .live)), and a VOD marked -1 is treated as a live channel: no progress
+# bar, seek disabled (PlaybackController.swift:135), no resume position and
+# nothing in Continue Watching (WatchHistoryStore.swift:55 excludes .live).
+# The durations below were measured by summing #EXTINF in each variant.
+# ---------------------------------------------------------------------------
+
+# --- Group 1: Apple's own official test assets ------------------------------
+# MPEG-TS delivery. This is the container almost every real IPTV provider
+# serves, so it is worth one entry of its own, separate from the fMP4 path.
+# 1800 s.
+#EXTINF:1800 tvg-name="Apple HLS Reference (TS)" group-title="Reference",Apple HLS Reference — bipbop (MPEG-TS)
+https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8
+
+# The single richest asset here, and the best one entry to judge the app on:
+# fragmented MP4, AVC *and* HEVC ladders (32 hvc1.2.4.L123.B0 variants), three
+# audio renditions (stereo AAC, 5.1 AC-3, 5.1 E-AC-3), CEA-608 closed captions
+# *and* WebVTT subtitles as separate menus, plus I-FRAME playlists for
+# trick-play scrubbing. Use it for the quality selector, the audio-track
+# picker, the subtitle menu and the CC menu. 600 s.
+#EXTINF:600 tvg-name="Apple HLS Advanced (fMP4)" group-title="Reference",Apple HLS Advanced — bipbop (fMP4, HEVC + CC + subtitles)
+https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_adv_example_hevc/master.m3u8
+
+# Dolby Vision (dvh1.05.*) and Dolby Atmos (E-AC-3) advanced example. Short on
+# purpose - it is the HDR/spatial-audio check, not a playback-length check.
+# 98 s.
+#EXTINF:98 tvg-name="Apple HLS Dolby" group-title="Reference",Apple HLS Advanced — Dolby Vision / Atmos
+https://devstreaming-cdn.apple.com/videos/streaming/examples/adv_dv_atmos/main.m3u8
+
+# --- Group 2: Creative Commons work and vendor demo streams -----------------
+# "Tears of Steel" (c) Blender Foundation - CC BY 3.0 - mountain.blender.org,
+# hosted on Unified Streaming's public demo origin.
+# This is the entry for resume-from-position and the Continue Watching row.
+# Watch at least 30 s and leave: below 30 s the app deliberately records
+# nothing (WatchHistoryEntry.isResumable), so a 10-second test looks broken
+# when it is working as designed. 734 s.
+#EXTINF:734 tvg-name="Tears of Steel" group-title="Reference",Tears of Steel (CC BY — Blender Foundation)
+https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8
+
+# Unified Streaming's own public live simulation - a real sliding-window live
+# manifest with no EXT-X-ENDLIST, so it exercises the live UI: no seek bar, no
+# duration, PROGRAM-DATE-TIME. Marked -1, which is what makes the app treat it
+# as live.
+#EXTINF:-1 tvg-name="Unified Streaming Live" group-title="Live reference",Unified Streaming — live demo
+https://demo.unified-streaming.com/k8s/live/stable/live.isml/.m3u8
+
+# --- Group 3: one free-to-air broadcaster, for the EPG ----------------------
+# NHK World Japan is free-to-air worldwide and NHK publishes this HLS URL on
+# its own public website. Its tvg-id matches the XMLTV guide declared at the
+# top of this file (650 programmes on 2026-09-25), so opening this channel is
+# how to see the EPG / "now playing" row populated. The other five entries
+# deliberately carry no tvg-id, so the same playlist also shows how a channel
+# without a guide is presented.
+#EXTINF:-1 tvg-id="NHKWorldJapan.jp" tvg-name="NHK World Japan" group-title="News",NHK World Japan (has EPG)
+https://masterpl.hls.nhkworld.jp/hls/w/live/smarttv.m3u8
